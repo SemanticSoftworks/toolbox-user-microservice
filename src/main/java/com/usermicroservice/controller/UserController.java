@@ -47,7 +47,6 @@ public class UserController{
         return new ResponseEntity<>(userDTO, HttpStatus.OK);
     }
 
-    // base 64 encoding
     @RequestMapping(value = "/login", method = RequestMethod.POST, consumes = {"application/json"})
     public ResponseEntity<UserDTO> login(@RequestBody UserAuthenticationDTO incomingUser){
         logger.info("THIS says: username: "+incomingUser.getUsername() + " password: "+incomingUser.getPassword());
@@ -64,7 +63,6 @@ public class UserController{
             userToReturn.setUserRoles(extractUserRoles(tmpUser.getUserRole()));
             return new ResponseEntity<>(userToReturn, HttpStatus.OK);
         }
-
         return new ResponseEntity<>(userToReturn, HttpStatus.BAD_REQUEST);
     }
 
@@ -109,7 +107,7 @@ public class UserController{
         UserDTO userDTO = new UserDTO();
 
         User userToUpdate = userService.findByUsername(incomingUser.getUsername());
-        userToUpdate.setPassword(incomingUser.getPassword());
+        userToUpdate.setPassword(Hash.BcryptEncrypt(incomingUser.getPassword()));
         userToUpdate.setFirstName(incomingUser.getFirstname());
         userToUpdate.setLastName(incomingUser.getLastname());
         userToUpdate.setEmail(incomingUser.getEmail());
@@ -128,22 +126,22 @@ public class UserController{
         return new ResponseEntity<>(userDTO, HttpStatus.BAD_REQUEST);
     }
 
-    @RequestMapping(value="/forgotpassword/{id}", method = RequestMethod.POST)
-    public ResponseEntity<UserUpdateDTO> changePassword(@PathVariable Long id , @RequestParam String newPassword){
+    @RequestMapping(value="/forgotpassword", method = RequestMethod.POST)
+    public ResponseEntity<UserUpdateDTO> changePassword(@RequestParam String username, @RequestParam String email , @RequestParam String newPassword){
         UserUpdateDTO adminUserDTO= new UserUpdateDTO();
 
-        User user = userService.findUserById(id);
-        user.setPassword(newPassword);
+        User user = userService.findByUsername(username);
+        user.setPassword(Hash.BcryptEncrypt(newPassword));
         user = userService.updateUser(user);
 
-        if(user != null) {
+        if(user != null && user.getEmail().equals(email)){
             adminUserDTO.setId(user.getId());
             adminUserDTO.setUsername(user.getUsername());
             adminUserDTO.setEmail(user.getEmail());
             adminUserDTO.setFirstname(user.getFirstName());
             adminUserDTO.setUserRoles(extractUserRoles(user.getUserRole()));
             adminUserDTO.setLastname(user.getLastName());
-            adminUserDTO.setPassword(user.getPassword());
+            adminUserDTO.setPassword(newPassword);
 
             return new ResponseEntity<>(adminUserDTO, HttpStatus.OK);
         }
@@ -151,18 +149,9 @@ public class UserController{
         return new ResponseEntity<>(adminUserDTO, HttpStatus.BAD_REQUEST);
     }
 
-    private List<String> extractUserRoles(Set<UserRole> roles){
-        List<String> rolesToAdd = new ArrayList<>();
-        for (UserRole role : roles) {
-            rolesToAdd.add(role.getRole().getRole());
-        }
-        return rolesToAdd;
-    }
-
-
     // ADMIN STUFF --> need to check role of the user!
     @RequestMapping(value = "/admin", method = RequestMethod.GET)
-    public ResponseEntity<List<AdminUserDTO>> getUsers(@RequestBody UserAuthenticationDTO userAuthenticationDTO ,@RequestParam Long startPosition, @RequestParam Long endPosition){
+    public ResponseEntity<List<AdminUserDTO>> AdmingetUsers(@RequestBody UserAuthenticationDTO userAuthenticationDTO ,@RequestParam Long startPosition, @RequestParam Long endPosition){
         List<AdminUserDTO> userDTOList = new ArrayList<>();
         User userCheck = userService.findByUserNameAndPassword(userAuthenticationDTO.getUsername(), userAuthenticationDTO.getPassword());
 
@@ -190,7 +179,7 @@ public class UserController{
     }
 
     @RequestMapping(value="/admin", method = RequestMethod.POST, consumes={"application/json"})
-    public ResponseEntity<AdminUserDTO> register(@RequestBody UserAuthenticationDTO userAuthenticationDTO ,@RequestBody AdminUserAdderDTO incomingUser){
+    public ResponseEntity<AdminUserDTO> Adminregister(@RequestBody UserAuthenticationDTO userAuthenticationDTO ,@RequestBody AdminUserAdderDTO incomingUser){
         AdminUserDTO userDTO = new AdminUserDTO();
         User userCheck = userService.findByUserNameAndPassword(userAuthenticationDTO.getUsername(), userAuthenticationDTO.getPassword());
 
@@ -237,7 +226,7 @@ public class UserController{
     }
 
     @RequestMapping(value="/admin/accountActivation/{id}", method = RequestMethod.POST)
-    public ResponseEntity<AdminUserDTO> accountActivation(@PathVariable Long id , @RequestParam Boolean enable, @RequestParam UserAuthenticationDTO userAuthenticationDTO){
+    public ResponseEntity<AdminUserDTO> AdminaccountActivation(@PathVariable Long id , @RequestParam Boolean enable, @RequestParam UserAuthenticationDTO userAuthenticationDTO){
         AdminUserDTO userToReturn = new AdminUserDTO();
 
         User userChecker = userService.findByUserNameAndPassword(userAuthenticationDTO.getUsername(), userAuthenticationDTO.getPassword());
@@ -262,7 +251,7 @@ public class UserController{
     }
 
     @RequestMapping(value="/admin/update", method = RequestMethod.POST, consumes={"application/json"})
-    public ResponseEntity<AdminUserDTO> updateUser(@RequestParam UserAuthenticationDTO userAuthenticationDTO ,@RequestBody AdminUserDTO incomingUser){
+    public ResponseEntity<AdminUserDTO> AdminupdateUser(@RequestParam UserAuthenticationDTO userAuthenticationDTO ,@RequestBody AdminUserDTO incomingUser){
 
         AdminUserDTO adminUserDTO= new AdminUserDTO();
         Set<UserRole> userRoles = new HashSet<>();
@@ -271,7 +260,7 @@ public class UserController{
         if(userCheck != null) {
             if(checkAdminRole(userCheck.getUserRole())) {
                 User user = userService.findUserById(incomingUser.getId());
-                user.setPassword(incomingUser.getPassword());
+                user.setPassword(Hash.BcryptEncrypt(incomingUser.getPassword()));
                 user.setEmail(incomingUser.getEmail());
                 user.setFirstName(incomingUser.getFirstname());
                 user.setLastName(incomingUser.getLastname());
@@ -307,6 +296,14 @@ public class UserController{
             }
         }
         return new ResponseEntity<>(adminUserDTO, HttpStatus.BAD_REQUEST);
+    }
+
+    private List<String> extractUserRoles(Set<UserRole> roles){
+        List<String> rolesToAdd = new ArrayList<>();
+        for (UserRole role : roles) {
+            rolesToAdd.add(role.getRole().getRole());
+        }
+        return rolesToAdd;
     }
 
     private boolean checkAdminRole(Set<UserRole> userRoles){
