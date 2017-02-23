@@ -36,7 +36,7 @@ public class UserController{
         User userCheck = userService.findByUserNameAndPassword(username, password);
 
         if(userCheck != null){
-            if(checkAdminRole(userCheck.getUserRole())) {
+            if(checkOtherRole(userCheck.getUserRole())) {
                 return new ResponseEntity<>(userCheck.getId(), HttpStatus.OK);
             }
         }
@@ -162,7 +162,22 @@ public class UserController{
         return new ResponseEntity<>(adminUserDTO, HttpStatus.BAD_REQUEST);
     }
 
+
     // ADMIN STUFF --> need to check role of the user!
+    @RequestMapping(value = "/admin/permission", method = RequestMethod.GET)
+    public ResponseEntity<Long> getAdminPermission(@RequestParam String username, @RequestParam String password){
+        logger.info("incoming user with username: "+username + " and password: "+password+" is asking for admin permission");
+        User userCheck = userService.findByUserNameAndPassword(username, password);
+
+        if(userCheck != null){
+            if(checkAdminRole(userCheck.getUserRole())) {
+                return new ResponseEntity<>(userCheck.getId(), HttpStatus.OK);
+            }
+        }
+        return new ResponseEntity<>(0L, HttpStatus.BAD_REQUEST);
+    }
+
+
     @RequestMapping(value = "/admin", method = RequestMethod.GET)
     public ResponseEntity<List<AdminUserDTO>> AdmingetUsers(@RequestBody UserAuthenticationDTO userAuthenticationDTO ,@RequestParam Long startPosition, @RequestParam Long endPosition){
         List<AdminUserDTO> userDTOList = new ArrayList<>();
@@ -322,6 +337,15 @@ public class UserController{
     private boolean checkAdminRole(Set<UserRole> userRoles){
         for(UserRole role : userRoles){
             if(role.getRole().getRole().equals("ROLE_ADMIN")){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean checkOtherRole(Set<UserRole> userRoles){
+        for(UserRole role : userRoles){
+            if(role.getRole().getRole().equals("ROLE_AUCTIONEER") || role.getRole().getRole().equals("ROLE_ADMIN")){
                 return true;
             }
         }
