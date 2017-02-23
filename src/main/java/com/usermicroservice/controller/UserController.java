@@ -114,7 +114,6 @@ public class UserController{
         return new ResponseEntity<>(userDTO, HttpStatus.BAD_REQUEST);
     }
 
-    // cant change username & disable!
     @RequestMapping(value="/update" , method = RequestMethod.POST, consumes={"application/json"})
     public ResponseEntity<UserDTO> updateUser(@RequestBody UserRegistrationDTO incomingUser){
         UserDTO userDTO = new UserDTO();
@@ -178,7 +177,7 @@ public class UserController{
     }
 
 
-    @RequestMapping(value = "/admin", method = RequestMethod.GET)
+    @RequestMapping(value = "/admin", method = RequestMethod.GET , consumes={"application/json"})
     public ResponseEntity<List<AdminUserDTO>> AdmingetUsers(@RequestBody UserAuthenticationDTO userAuthenticationDTO ,@RequestParam Long startPosition, @RequestParam Long endPosition){
         List<AdminUserDTO> userDTOList = new ArrayList<>();
         User userCheck = userService.findByUserNameAndPassword(userAuthenticationDTO.getUsername(), userAuthenticationDTO.getPassword());
@@ -206,6 +205,7 @@ public class UserController{
         return new ResponseEntity<>(userDTOList, HttpStatus.BAD_REQUEST);
     }
 
+    // not used in api yet
     @RequestMapping(value="/admin", method = RequestMethod.POST, consumes={"application/json"})
     public ResponseEntity<AdminUserDTO> Adminregister(@RequestBody UserAuthenticationDTO userAuthenticationDTO ,@RequestBody AdminUserAdderDTO incomingUser){
         AdminUserDTO userDTO = new AdminUserDTO();
@@ -253,7 +253,8 @@ public class UserController{
         return new ResponseEntity<>(userDTO, HttpStatus.BAD_REQUEST);
     }
 
-    @RequestMapping(value="/admin/accountActivation/{id}", method = RequestMethod.POST)
+    // not used in api yet
+    @RequestMapping(value="/admin/accountActivation/{id}", method = RequestMethod.PUT)
     public ResponseEntity<AdminUserDTO> AdminaccountActivation(@PathVariable Long id , @RequestParam Boolean enable, @RequestParam UserAuthenticationDTO userAuthenticationDTO){
         AdminUserDTO userToReturn = new AdminUserDTO();
 
@@ -278,7 +279,8 @@ public class UserController{
         return new ResponseEntity<>(userToReturn, HttpStatus.BAD_REQUEST);
     }
 
-    @RequestMapping(value="/admin/update", method = RequestMethod.POST, consumes={"application/json"})
+    // not used in api yet
+    @RequestMapping(value="/admin/update", method = RequestMethod.PUT, consumes={"application/json"})
     public ResponseEntity<AdminUserDTO> AdminupdateUser(@RequestParam UserAuthenticationDTO userAuthenticationDTO ,@RequestBody AdminUserDTO incomingUser){
 
         AdminUserDTO adminUserDTO= new AdminUserDTO();
