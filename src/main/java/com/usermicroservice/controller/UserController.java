@@ -30,6 +30,17 @@ public class UserController{
     @Autowired
     private UserService userService;
 
+    @RequestMapping(value = "/", method = RequestMethod.GET)
+    public ResponseEntity<Long> getPermission(@RequestBody UserAuthenticationDTO incomingUser){
+        logger.info("incoming user with username: "+incomingUser.getUsername() + " and password: "+incomingUser.getPassword()+" is asking for permission");
+        User userCheck = userService.findByUserNameAndPassword(incomingUser.getUsername(), incomingUser.getPassword());
+
+        if(userCheck != null){
+            return new ResponseEntity<>(userCheck.getId() , HttpStatus.OK);
+        }
+        return new ResponseEntity<>(0L, HttpStatus.BAD_REQUEST);
+    }
+
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public ResponseEntity<UserDTO> getUser(@PathVariable Long id){
         User user = userService.findUserById(id);
