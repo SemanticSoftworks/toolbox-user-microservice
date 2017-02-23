@@ -38,7 +38,7 @@ public class UserServiceImpl implements UserService {
     public User findByUserNameAndPassword(String username, String password) {
         User tmpUser = userRepository.findByUsername(username);
 
-        if(tmpUser != null){
+        if(tmpUser != null && tmpUser.isEnabled()){
             boolean correctPassword = BCrypt.checkpw(password, tmpUser.getPassword()); // om skickad hashad lösenord = databasens
             if(correctPassword){
                 return tmpUser;
