@@ -31,12 +31,14 @@ public class UserController{
     private UserService userService;
 
     @RequestMapping(value = "/", method = RequestMethod.GET)
-    public ResponseEntity<Long> getPermission(@RequestBody UserAuthenticationDTO incomingUser){
-        logger.info("incoming user with username: "+incomingUser.getUsername() + " and password: "+incomingUser.getPassword()+" is asking for permission");
-        User userCheck = userService.findByUserNameAndPassword(incomingUser.getUsername(), incomingUser.getPassword());
+    public ResponseEntity<Long> getPermission(@RequestParam String username, @RequestParam String password){
+        logger.info("incoming user with username: "+username + " and password: "+password+" is asking for permission");
+        User userCheck = userService.findByUserNameAndPassword(username, password);
 
         if(userCheck != null){
-            return new ResponseEntity<>(userCheck.getId() , HttpStatus.OK);
+            if(checkAdminRole(userCheck.getUserRole())) {
+                return new ResponseEntity<>(userCheck.getId(), HttpStatus.OK);
+            }
         }
         return new ResponseEntity<>(0L, HttpStatus.BAD_REQUEST);
     }
