@@ -30,18 +30,6 @@ public class UserController{
     @Autowired
     private UserService userService;
 
-    @RequestMapping(value = "/", method = RequestMethod.GET)
-    public ResponseEntity<Long> getPermission(@RequestParam String username, @RequestParam String password){
-        logger.info("incoming user with username: "+username + " and password: "+password+" is asking for permission");
-        User userCheck = userService.findByUserNameAndPassword(username, password);
-
-        if(userCheck != null){
-            if(checkOtherRole(userCheck.getUserRole())) {
-                return new ResponseEntity<>(userCheck.getId(), HttpStatus.OK);
-            }
-        }
-        return new ResponseEntity<>(0L, HttpStatus.BAD_REQUEST);
-    }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public ResponseEntity<UserDTO> getUser(@PathVariable Long id){
@@ -57,6 +45,22 @@ public class UserController{
             userDTO.setUserRoles(extractUserRoles(user.getUserRole()));
         }
 
+        return new ResponseEntity<>(userDTO, HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/username", method = RequestMethod.GET)
+    public ResponseEntity<AdminUserDTO> getUserbyUsername(@RequestParam String username){
+        logger.info("username got : "+username);
+        AdminUserDTO userDTO = new AdminUserDTO();
+        User user = userService.findByUsername(username);
+
+        if(user != null){
+            userDTO.setUsername(user.getUsername());
+            userDTO.setPassword(user.getPassword());
+            logger.info("PASSWORD GOT: "+user.getPassword());
+            userDTO.setEnabled(user.isEnabled());
+            userDTO.setUserRoles(extractUserRoles(user.getUserRole()));
+        }
         return new ResponseEntity<>(userDTO, HttpStatus.OK);
     }
 
@@ -162,168 +166,131 @@ public class UserController{
     }
 
 
-    // ADMIN STUFF --> need to check role of the user!
-    @RequestMapping(value = "/admin/permission", method = RequestMethod.GET)
-    public ResponseEntity<Long> getAdminPermission(@RequestParam String username, @RequestParam String password){
-        logger.info("incoming user with username: "+username + " and password: "+password+" is asking for admin permission");
-        User userCheck = userService.findByUserNameAndPassword(username, password);
 
-        if(userCheck != null){
-            if(checkAdminRole(userCheck.getUserRole())) {
-                return new ResponseEntity<>(userCheck.getId(), HttpStatus.OK);
-            }
-        }
-        return new ResponseEntity<>(0L, HttpStatus.BAD_REQUEST);
-    }
-
-
-    @RequestMapping(value = "/admin", method = RequestMethod.GET , consumes={"application/json"})
-    public ResponseEntity<List<AdminUserDTO>> AdmingetUsers(@RequestBody UserAuthenticationDTO userAuthenticationDTO ,@RequestParam Long startPosition, @RequestParam Long endPosition){
+    @RequestMapping(value = "/admin", method = RequestMethod.GET)
+    public ResponseEntity<AdminUserListingDTO> AdminGetUsers(@RequestParam Long startPosition, @RequestParam Long endPosition){
         List<AdminUserDTO> userDTOList = new ArrayList<>();
-        User userCheck = userService.findByUserNameAndPassword(userAuthenticationDTO.getUsername(), userAuthenticationDTO.getPassword());
+        AdminUserListingDTO adminUserListingDTO = new AdminUserListingDTO();
+        List<User> userList = userService.findAllUsers(startPosition, endPosition);
 
-        if(userCheck != null) {
-            if(checkAdminRole(userCheck.getUserRole())){
-                List<User> userList = userService.findAllUsers(startPosition, endPosition);
+        for (User user : userList) {
+            AdminUserDTO userDTO = new AdminUserDTO();
+            userDTO.setId(user.getId());
+            userDTO.setUsername(user.getUsername());
+            userDTO.setEmail(user.getEmail());
+            userDTO.setFirstname(user.getFirstName());
+            userDTO.setLastname(user.getLastName());
+            userDTO.setUserRoles(extractUserRoles(user.getUserRole()));
+            userDTO.setEnabled(user.isEnabled());
+            userDTO.setPassword(user.getPassword());
 
-                for (User user : userList) {
-                    AdminUserDTO userDTO = new AdminUserDTO();
-                    userDTO.setId(user.getId());
-                    userDTO.setUsername(user.getUsername());
-                    userDTO.setEmail(user.getEmail());
-                    userDTO.setFirstname(user.getFirstName());
-                    userDTO.setLastname(user.getLastName());
-                    userDTO.setUserRoles(extractUserRoles(user.getUserRole()));
-                    userDTO.setEnabled(user.isEnabled());
-                    userDTO.setPassword(user.getPassword());
-
-                    userDTOList.add(userDTO);
-                }
-                return new ResponseEntity<>(userDTOList, HttpStatus.OK);
-            }
+            userDTOList.add(userDTO);
         }
-        return new ResponseEntity<>(userDTOList, HttpStatus.BAD_REQUEST);
+        adminUserListingDTO.setAdminUserDTOList(userDTOList);
+        return new ResponseEntity<>(adminUserListingDTO, HttpStatus.OK);
     }
 
-    // not used in api yet
+
     @RequestMapping(value="/admin", method = RequestMethod.POST, consumes={"application/json"})
-    public ResponseEntity<AdminUserDTO> Adminregister(@RequestBody UserAuthenticationDTO userAuthenticationDTO ,@RequestBody AdminUserAdderDTO incomingUser){
+    public ResponseEntity<AdminUserDTO> Adminregister(@RequestBody AdminUserAdderDTO incomingUser){
         AdminUserDTO userDTO = new AdminUserDTO();
-        User userCheck = userService.findByUserNameAndPassword(userAuthenticationDTO.getUsername(), userAuthenticationDTO.getPassword());
 
-        if(userCheck != null) {
-            if(checkAdminRole(userCheck.getUserRole())) {
-                User userToAdd = userService.findByUsername(incomingUser.getUsername());
-                if (userToAdd == null){
-                    User newUser = new User();
-                    newUser.setUsername(incomingUser.getUsername());
-                    newUser.setPassword(Hash.BcryptEncrypt(incomingUser.getPassword()));
-                    newUser.setEmail(incomingUser.getEmail());
-                    newUser.setEnabled(incomingUser.isEnabled());
-                    newUser.setFirstName(incomingUser.getFirstname());
-                    newUser.setLastName(incomingUser.getLastname());
+        User userToAdd = userService.findByUsername(incomingUser.getUsername());
+        if (userToAdd == null){
+            User newUser = new User();
+            newUser.setUsername(incomingUser.getUsername());
+            newUser.setPassword(Hash.BcryptEncrypt(incomingUser.getPassword()));
+            newUser.setEmail(incomingUser.getEmail());
+            newUser.setEnabled(incomingUser.isEnabled());
+            newUser.setFirstName(incomingUser.getFirstname());
+            newUser.setLastName(incomingUser.getLastname());
 
-                    User mockUser = userService.addUser(newUser);
+            User mockUser = userService.addUser(newUser);
 
-                    if (mockUser != null) {
-                        for (String role : incomingUser.getUserRoles()) {
-                            Role realRole = userService.getRole(role);
-                            if (realRole != null) {
-
-                                UserRole newUserRole = new UserRole();
-                                newUserRole.setUser(mockUser);
-                                newUserRole.setRole(realRole);
-                                userService.addUserRole(newUserRole);
-                            }
-                        }
-                        userDTO.setId(mockUser.getId());
-                        userDTO.setUsername(mockUser.getUsername());
-                        userDTO.setEmail(mockUser.getEmail());
-                        userDTO.setFirstname(mockUser.getFirstName());
-                        userDTO.setLastname(mockUser.getLastName());
-                        userDTO.setUserRoles(extractUserRoles(mockUser.getUserRole()));
-                        userDTO.setEnabled(mockUser.isEnabled());
-                        userDTO.setPassword(mockUser.getPassword());
-
-                        return new ResponseEntity<>(userDTO, HttpStatus.OK);
+            if (mockUser != null) {
+                for (String role : incomingUser.getUserRoles()) {
+                    Role realRole = userService.getRole(role);
+                    if (realRole != null) {
+                        UserRole newUserRole = new UserRole();
+                        newUserRole.setUser(mockUser);
+                        newUserRole.setRole(realRole);
+                        userService.addUserRole(newUserRole);
                     }
                 }
+                userDTO.setId(mockUser.getId());
+                userDTO.setUsername(mockUser.getUsername());
+                userDTO.setEmail(mockUser.getEmail());
+                userDTO.setFirstname(mockUser.getFirstName());
+                userDTO.setLastname(mockUser.getLastName());
+                userDTO.setUserRoles(extractUserRoles(mockUser.getUserRole()));
+                userDTO.setEnabled(mockUser.isEnabled());
+                userDTO.setPassword(mockUser.getPassword());
+
+                return new ResponseEntity<>(userDTO, HttpStatus.OK);
             }
         }
         return new ResponseEntity<>(userDTO, HttpStatus.BAD_REQUEST);
     }
 
-    // not used in api yet
     @RequestMapping(value="/admin/accountActivation/{id}", method = RequestMethod.PUT)
-    public ResponseEntity<AdminUserDTO> AdminaccountActivation(@PathVariable Long id , @RequestParam Boolean enable, @RequestParam UserAuthenticationDTO userAuthenticationDTO){
+    public ResponseEntity<AdminUserDTO> AdminaccountActivation(@PathVariable Long id , @RequestParam Boolean enable){
         AdminUserDTO userToReturn = new AdminUserDTO();
 
-        User userChecker = userService.findByUserNameAndPassword(userAuthenticationDTO.getUsername(), userAuthenticationDTO.getPassword());
+        User user = userService.findUserById(id);
+        user.setEnabled(enable);
+        user = userService.updateUser(user);
 
-        if(userChecker != null) {
-            if(checkAdminRole(userChecker.getUserRole())) {
-                User user = userService.findUserById(id);
-                user.setEnabled(enable);
-                user = userService.updateUser(user);
-
-                userToReturn.setId(user.getId());
-                userToReturn.setUserRoles(extractUserRoles(user.getUserRole()));
-                userToReturn.setUsername(user.getUsername());
-                userToReturn.setEmail(user.getEmail());
-                userToReturn.setFirstname(user.getFirstName());
-                userToReturn.setLastname(user.getLastName());
-                userToReturn.setEnabled(user.isEnabled());
-            }
+        if(user != null) {
+            userToReturn.setId(user.getId());
+            userToReturn.setUserRoles(extractUserRoles(user.getUserRole()));
+            userToReturn.setUsername(user.getUsername());
+            userToReturn.setEmail(user.getEmail());
+            userToReturn.setFirstname(user.getFirstName());
+            userToReturn.setLastname(user.getLastName());
+            userToReturn.setEnabled(user.isEnabled());
             return new ResponseEntity<>(userToReturn, HttpStatus.OK);
         }
         return new ResponseEntity<>(userToReturn, HttpStatus.BAD_REQUEST);
     }
 
-    // not used in api yet
-    @RequestMapping(value="/admin/update", method = RequestMethod.PUT, consumes={"application/json"})
-    public ResponseEntity<AdminUserDTO> AdminupdateUser(@RequestParam UserAuthenticationDTO userAuthenticationDTO ,@RequestBody AdminUserDTO incomingUser){
+    @RequestMapping(value="/admin/update", method = RequestMethod.POST, consumes={"application/json"})
+    public ResponseEntity<AdminUserDTO> AdminupdateUser(@RequestBody AdminUserDTO incomingUser){
 
         AdminUserDTO adminUserDTO= new AdminUserDTO();
         Set<UserRole> userRoles = new HashSet<>();
 
-        User userCheck = userService.findByUserNameAndPassword(userAuthenticationDTO.getUsername(),userAuthenticationDTO.getPassword());
-        if(userCheck != null) {
-            if(checkAdminRole(userCheck.getUserRole())) {
-                User user = userService.findUserById(incomingUser.getId());
-                user.setPassword(Hash.BcryptEncrypt(incomingUser.getPassword()));
-                user.setEmail(incomingUser.getEmail());
-                user.setFirstName(incomingUser.getFirstname());
-                user.setLastName(incomingUser.getLastname());
-                user.setEnabled(incomingUser.isEnabled());
-                for (String userRole : incomingUser.getUserRoles()) {
-                    UserRole realUserRole = new UserRole();
-                    realUserRole.setUser(user);
-
-                    Role roleCheck = userService.getRole(userRole);
-                    if (roleCheck != null) {
-                        realUserRole.setRole(roleCheck);
-                    }
-                    realUserRole = userService.addUserRole(realUserRole);
-                    userRoles.add(realUserRole);
-                }
-                user.setUserRole(userRoles);
-                user.setUserRole(userRoles);
-
-                user = userService.updateUser(user);
-
-                if (user != null) {
-                    adminUserDTO.setId(user.getId());
-                    adminUserDTO.setUsername(user.getUsername());
-                    adminUserDTO.setPassword(user.getPassword());
-                    adminUserDTO.setEmail(user.getEmail());
-                    adminUserDTO.setFirstname(user.getFirstName());
-                    adminUserDTO.setUserRoles(extractUserRoles(user.getUserRole()));
-                    adminUserDTO.setLastname(user.getLastName());
-                    adminUserDTO.setEnabled(user.isEnabled());
-
-                    return new ResponseEntity<>(adminUserDTO, HttpStatus.OK);
-                }
+        User user = userService.findUserById(incomingUser.getId());
+        user.setPassword(Hash.BcryptEncrypt(incomingUser.getPassword()));
+        user.setEmail(incomingUser.getEmail());
+        user.setFirstName(incomingUser.getFirstname());
+        user.setLastName(incomingUser.getLastname());
+        user.setEnabled(incomingUser.isEnabled());
+        for (String userRole : incomingUser.getUserRoles()) {
+            UserRole realUserRole = new UserRole();
+            realUserRole.setUser(user);
+            Role roleCheck = userService.getRole(userRole);
+            if (roleCheck != null) {
+                realUserRole.setRole(roleCheck);
             }
+            realUserRole = userService.addUserRole(realUserRole);
+            userRoles.add(realUserRole);
+        }
+        user.setUserRole(userRoles);
+        user.setUserRole(userRoles);
+
+        user = userService.updateUser(user);
+
+        if (user != null) {
+            adminUserDTO.setId(user.getId());
+            adminUserDTO.setUsername(user.getUsername());
+            adminUserDTO.setPassword(user.getPassword());
+            adminUserDTO.setEmail(user.getEmail());
+            adminUserDTO.setFirstname(user.getFirstName());
+            adminUserDTO.setUserRoles(extractUserRoles(user.getUserRole()));
+            adminUserDTO.setLastname(user.getLastName());
+            adminUserDTO.setEnabled(user.isEnabled());
+
+            return new ResponseEntity<>(adminUserDTO, HttpStatus.OK);
         }
         return new ResponseEntity<>(adminUserDTO, HttpStatus.BAD_REQUEST);
     }
@@ -334,23 +301,5 @@ public class UserController{
             rolesToAdd.add(role.getRole().getRole());
         }
         return rolesToAdd;
-    }
-
-    private boolean checkAdminRole(Set<UserRole> userRoles){
-        for(UserRole role : userRoles){
-            if(role.getRole().getRole().equals("ROLE_ADMIN")){
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean checkOtherRole(Set<UserRole> userRoles){
-        for(UserRole role : userRoles){
-            if(role.getRole().getRole().equals("ROLE_AUCTIONEER") || role.getRole().getRole().equals("ROLE_ADMIN")){
-                return true;
-            }
-        }
-        return false;
     }
 }
