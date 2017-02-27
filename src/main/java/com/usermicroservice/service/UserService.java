@@ -20,4 +20,8 @@ public interface UserService {
 
     //ADMIN
     List<User> findAllUsers(Long startPosition, Long endPosition);
+    Role addRole(Role newRole);
+    List<Role> getRoles();
+    Role findRoleById(Integer id);
+    Role updateRole(Role updateRole);
 }

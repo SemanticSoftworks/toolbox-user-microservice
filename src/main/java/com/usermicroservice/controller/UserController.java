@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -166,7 +168,7 @@ public class UserController{
     }
 
 
-
+    // ADMIN STUFF
     @RequestMapping(value = "/admin", method = RequestMethod.GET)
     public ResponseEntity<AdminUserListingDTO> AdminGetUsers(@RequestParam Long startPosition, @RequestParam Long endPosition){
         List<AdminUserDTO> userDTOList = new ArrayList<>();
@@ -293,6 +295,59 @@ public class UserController{
             return new ResponseEntity<>(adminUserDTO, HttpStatus.OK);
         }
         return new ResponseEntity<>(adminUserDTO, HttpStatus.BAD_REQUEST);
+    }
+
+    @RequestMapping(value="/role", method = RequestMethod.GET)
+    public ResponseEntity<RoleListingDTO> getRoles(){
+        List<RoleDTO> roleListDTO = new ArrayList<>();
+        RoleListingDTO roleListingDTO = new RoleListingDTO();
+        List<Role> roleList = userService.getRoles();
+        for(Role role : roleList){
+            RoleDTO roleDTO = new RoleDTO();
+            roleDTO.setRoleId(role.getRoleID());
+            roleDTO.setRole(role.getRole());
+
+            roleListDTO.add(roleDTO);
+        }
+        roleListingDTO.setRoles(roleListDTO);
+        return new ResponseEntity<>(roleListingDTO, HttpStatus.OK);
+    }
+
+
+    @RequestMapping(value="/role/add", method = RequestMethod.POST)
+    public ResponseEntity<RoleDTO> addRole(@RequestParam String role){
+        RoleDTO roleDTO = new RoleDTO();
+        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        Role newRole = new Role();
+        newRole.setRole("ROLE_"+role.toUpperCase());
+        newRole = userService.addRole(newRole);
+
+        if(newRole != null) {
+            roleDTO.setRoleId(newRole.getRoleID());
+            roleDTO.setRole(newRole.getRole());
+            return new ResponseEntity<>(roleDTO, HttpStatus.OK);
+        }
+
+        return new ResponseEntity<>(roleDTO, HttpStatus.BAD_REQUEST);
+    }
+
+    @RequestMapping(value="/role/update", method = RequestMethod.POST)
+    public ResponseEntity<RoleDTO> updateRole(@RequestParam RoleDTO incomingRole){
+        RoleDTO roleDTO = new RoleDTO();
+        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        Role role = userService.findRoleById(incomingRole.getRoleId());
+        role.setRole(incomingRole.getRole());
+        role = userService.updateRole(role);
+
+        if(role != null){
+            roleDTO.setRoleId(role.getRoleID());
+            roleDTO.setRole(role.getRole());
+            return new ResponseEntity<>(roleDTO, HttpStatus.OK);
+        }
+
+        return new ResponseEntity<>(roleDTO, HttpStatus.BAD_REQUEST);
     }
 
     private List<String> extractUserRoles(Set<UserRole> roles){

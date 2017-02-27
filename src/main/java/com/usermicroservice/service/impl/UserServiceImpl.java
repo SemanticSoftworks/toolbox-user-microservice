@@ -85,4 +85,21 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> findAllUsers(Long startPosition, Long endPosition) { return userCustomRepository.getUsers(startPosition,endPosition); }
+
+    @Override
+    public Role addRole(Role newRole) {
+        Role role = roleRepository.findByRole(newRole.getRole());
+        if(role == null)
+            return roleRepository.save(newRole);
+        return null;
+    }
+
+    @Override
+    public List<Role> getRoles() { return roleRepository.findAll(); }
+
+    @Override
+    public Role findRoleById(Integer id) { return roleRepository.findOne(id); }
+
+    @Override
+    public Role updateRole(Role updateRole) { return roleRepository.save(updateRole); }
 }
