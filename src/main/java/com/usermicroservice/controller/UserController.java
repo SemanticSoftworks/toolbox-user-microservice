@@ -297,7 +297,8 @@ public class UserController{
         return new ResponseEntity<>(adminUserDTO, HttpStatus.BAD_REQUEST);
     }
 
-    @RequestMapping(value="/role", method = RequestMethod.GET)
+
+    @RequestMapping(value="/admin/role", method = RequestMethod.GET)
     public ResponseEntity<RoleListingDTO> getRoles(){
         List<RoleDTO> roleListDTO = new ArrayList<>();
         RoleListingDTO roleListingDTO = new RoleListingDTO();
@@ -314,7 +315,7 @@ public class UserController{
     }
 
 
-    @RequestMapping(value="/role/add", method = RequestMethod.POST)
+    @RequestMapping(value="/admin/role", method = RequestMethod.POST)
     public ResponseEntity<RoleDTO> addRole(@RequestParam String role){
         RoleDTO roleDTO = new RoleDTO();
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -332,7 +333,8 @@ public class UserController{
         return new ResponseEntity<>(roleDTO, HttpStatus.BAD_REQUEST);
     }
 
-    @RequestMapping(value="/role/update", method = RequestMethod.POST)
+    //
+    @RequestMapping(value="/admin/role", method = RequestMethod.PUT)
     public ResponseEntity<RoleDTO> updateRole(@RequestParam RoleDTO incomingRole){
         RoleDTO roleDTO = new RoleDTO();
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
