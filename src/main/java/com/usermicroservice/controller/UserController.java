@@ -32,7 +32,6 @@ public class UserController{
     @Autowired
     private UserService userService;
 
-
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public ResponseEntity<UserDTO> getUser(@PathVariable Long id){
         User user = userService.findUserById(id);
@@ -159,7 +158,6 @@ public class UserController{
             adminUserDTO.setFirstname(user.getFirstName());
             adminUserDTO.setUserRoles(extractUserRoles(user.getUserRole()));
             adminUserDTO.setLastname(user.getLastName());
-            adminUserDTO.setPassword(newPassword);
 
             return new ResponseEntity<>(adminUserDTO, HttpStatus.OK);
         }
@@ -184,7 +182,6 @@ public class UserController{
             userDTO.setLastname(user.getLastName());
             userDTO.setUserRoles(extractUserRoles(user.getUserRole()));
             userDTO.setEnabled(user.isEnabled());
-            userDTO.setPassword(user.getPassword());
 
             userDTOList.add(userDTO);
         }

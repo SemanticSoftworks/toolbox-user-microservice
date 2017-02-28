@@ -24,8 +24,8 @@ public class UserRepositoryImpl implements UserCustomRepository {
     @Override
     public List<User> getUsers(Long start, Long end) {
         Session session = factory.getCurrentSession();
-        logger.info("before running query!");
-        Query q = session.createQuery("SELECT u FROM com.usermicroservice.domain.User u");
+        logger.info("before running query! session: "+session.isOpen());
+        Query q = session.createQuery("SELECT us FROM com.usermicroservice.domain.User us");
         q.setFirstResult(start.intValue());
         q.setMaxResults(end.intValue());
         logger.info("After setting criteria");
