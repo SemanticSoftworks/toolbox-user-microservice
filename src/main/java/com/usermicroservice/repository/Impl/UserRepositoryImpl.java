@@ -5,6 +5,8 @@ import com.usermicroservice.repository.UserCustomRepository;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -14,16 +16,21 @@ import java.util.List;
  */
 public class UserRepositoryImpl implements UserCustomRepository {
 
+    private static final Logger logger = LoggerFactory.getLogger(UserRepositoryImpl.class);
+
     @Autowired
     private SessionFactory factory;
 
     @Override
     public List<User> getUsers(Long start, Long end) {
         Session session = factory.getCurrentSession();
-        Query q = session.createQuery("SELECT u from com.usermicroservice.domain.User u");
+        logger.info("before running query!");
+        Query q = session.createQuery("SELECT u FROM com.usermicroservice.domain.User u");
         q.setFirstResult(start.intValue());
         q.setMaxResults(end.intValue());
+        logger.info("After setting criteria");
         List<User> userList = q.list();
+        logger.info("returning result");
         return userList;
     }
 }

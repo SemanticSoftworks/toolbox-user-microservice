@@ -174,7 +174,7 @@ public class UserController{
         List<AdminUserDTO> userDTOList = new ArrayList<>();
         AdminUserListingDTO adminUserListingDTO = new AdminUserListingDTO();
         List<User> userList = userService.findAllUsers(startPosition, endPosition);
-
+        logger.info("GET USERS!!!!");
         for (User user : userList) {
             AdminUserDTO userDTO = new AdminUserDTO();
             userDTO.setId(user.getId());

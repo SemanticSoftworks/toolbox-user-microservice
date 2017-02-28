@@ -32,7 +32,7 @@ public class ApplicationDataSource {
     }
 
     @Bean
-    public SessionFactory sessionFactory(HibernateEntityManagerFactory hibernateEntityManagerFactory) {
-        return hibernateEntityManagerFactory.getSessionFactory();
+    public SessionFactory sessionFactory(HibernateEntityManagerFactory hemf) {
+        return hemf.getSessionFactory();
     }
 }
