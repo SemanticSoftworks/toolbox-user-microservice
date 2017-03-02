@@ -1,0 +1,12 @@
+version: "3.0"
+services:
+  userweb:
+    build: .
+    ports:
+      - "8091:8091"
+    depends_on:
+          - "userdb"
+  userdb:
+    build: ./mysql
+    ports:
+      - "3307:3307"
