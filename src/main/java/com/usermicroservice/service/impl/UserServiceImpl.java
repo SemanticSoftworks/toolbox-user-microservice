@@ -75,6 +75,12 @@ public class UserServiceImpl implements UserService {
     public UserRole addUserRole(UserRole newUserRole) { return userRoleRepository.save(newUserRole); }
 
     @Override
+    public UserRole deleteUserRole(UserRole newUserRole) {
+        userRoleRepository.delete(newUserRole);
+        return newUserRole;
+    }
+
+    @Override
     public User updateUser(User user) {
 
         if(user != null){

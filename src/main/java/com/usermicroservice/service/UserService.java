@@ -16,6 +16,7 @@ public interface UserService {
     User addUser(User newUser);
     Role getRole(String role);
     UserRole addUserRole(UserRole newUserRole);
+    UserRole deleteUserRole(UserRole newUserRole);
     User updateUser(User user);
 
     //ADMIN
