@@ -252,6 +252,26 @@ public class UserController{
         return new ResponseEntity<>(userToReturn, HttpStatus.BAD_REQUEST);
     }
 
+    private Set<UserRole> updateUserRoles(List<String> fakeRoles, User user){
+        Set<UserRole> userRoles = new HashSet<>();
+
+        // delete existing userRoles
+        for(UserRole roleToDelete : user.getUserRole()){ userService.deleteUserRole(roleToDelete); }
+        // add ones not there
+        for(String userRole : fakeRoles){
+            UserRole realUserRole = new UserRole();
+            realUserRole.setUser(user);
+
+            Role roleCheck =userService.getRole(userRole);
+            if(roleCheck != null){
+                realUserRole.setRole(roleCheck);
+                realUserRole = userService.addUserRole(realUserRole);
+                userRoles.add(realUserRole);
+            }
+        }
+        return userRoles;
+    }
+
     @RequestMapping(value="/admin/update", method = RequestMethod.POST, consumes={"application/json"})
     public ResponseEntity<AdminUserDTO> AdminupdateUser(@RequestBody AdminUserDTO incomingUser){
 
@@ -264,19 +284,8 @@ public class UserController{
         user.setFirstName(incomingUser.getFirstname());
         user.setLastName(incomingUser.getLastname());
         user.setEnabled(incomingUser.isEnabled());
-        for (String userRole : incomingUser.getUserRoles()) {
-            UserRole realUserRole = new UserRole();
-            realUserRole.setUser(user);
-            Role roleCheck = userService.getRole(userRole);
-            if (roleCheck != null) {
-                realUserRole.setRole(roleCheck);
-            }
-            realUserRole = userService.addUserRole(realUserRole);
-            userRoles.add(realUserRole);
-        }
-        user.setUserRole(userRoles);
-        user.setUserRole(userRoles);
 
+        user.setUserRole(updateUserRoles(incomingUser.getUserRoles(),user));
         user = userService.updateUser(user);
 
         if (user != null) {
