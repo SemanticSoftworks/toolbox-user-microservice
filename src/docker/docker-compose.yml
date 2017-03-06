@@ -8,5 +8,7 @@ services:
           - "userdb"
   userdb:
     build: ./mysql
+    volumes:
+      - /home/docker/SemanticSoftworks/user-microservice-db:/var/lib/mysql
     ports:
       - "3307:3307"
