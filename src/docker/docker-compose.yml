@@ -8,7 +8,7 @@ services:
           - "userdb"
   userdb:
     build: ./mysql
-    volume:
+    volumes:
       - /home/softish/DatabaseScratchDisk:/var/lib/mysql
     ports:
       - "3307:3307"
