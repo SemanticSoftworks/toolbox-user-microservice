@@ -90,6 +90,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public boolean loginByUsernameAndPassword(String username, String password) {
+        User tmpUser = userRepository.findByUsername(username);
+
+        System.out.println("user : "+username+" p:" + password);
+
+        if(tmpUser != null && tmpUser.isEnabled()){
+            return true;
+            //return BCrypt.checkpw(password, tmpUser.getPassword()); // om skickad hashad lösenord = databasens
+        }
+        return false;
+    }
+
+    @Override
     public List<User> findAllUsers(Long startPosition, Long endPosition) { return userCustomRepository.getUsers(startPosition,endPosition); }
 
     @Override
@@ -108,4 +121,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Role updateRole(Role updateRole) { return roleRepository.save(updateRole); }
+
+    @Override
+    public List<User> findUsersByRoleId(int i) {
+        return userCustomRepository.findUsersByRoleId(i) ;
+    }
 }

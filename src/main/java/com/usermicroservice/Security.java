@@ -13,10 +13,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 /**
  * Created by dani on 2017-02-22.
  */
-@EnableWebSecurity
+//@EnableWebSecurity
 public class Security {
 
-    @Bean
+    /*@Bean
     public PasswordEncoder passwordEncoder() {
         PasswordEncoder encoder = new BCryptPasswordEncoder();
         return encoder;
@@ -32,5 +32,5 @@ public class Security {
                     .authorizeRequests()
                     .antMatchers("/user/**").permitAll();
         }
-    }
+    }*/
 }

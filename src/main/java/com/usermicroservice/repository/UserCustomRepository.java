@@ -11,4 +11,6 @@ import java.util.List;
 @Repository
 public interface UserCustomRepository{
     List<User> getUsers(Long start, Long end);
+    User findByUsername(String username);
+    List<User> findUsersByRoleId(int i);
 }

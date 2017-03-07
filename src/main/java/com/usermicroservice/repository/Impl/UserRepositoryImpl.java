@@ -33,4 +33,22 @@ public class UserRepositoryImpl implements UserCustomRepository {
         logger.info("returning result");
         return userList;
     }
+
+    @Override
+    public User findByUsername(String username) {
+        Session session = factory.getCurrentSession();
+        Query q = session.createQuery("SELECT us FROM com.usermicroservice.domain.User us WHERE us.username=:username");
+        q.setParameter("username",username);
+        logger.info("After setting criteria");
+        User userToReturn = (User)q.list().get(0);
+        logger.info("returning result");
+        return userToReturn;
+    }
+
+    @Override
+    public List<User> findUsersByRoleId(int i) {
+       //want to return all the User with the roleId;
+        return null;
+    }
+
 }

@@ -18,11 +18,12 @@ public interface UserService {
     UserRole addUserRole(UserRole newUserRole);
     UserRole deleteUserRole(UserRole newUserRole);
     User updateUser(User user);
-
+    boolean loginByUsernameAndPassword(String username, String password);
     //ADMIN
     List<User> findAllUsers(Long startPosition, Long endPosition);
     Role addRole(Role newRole);
     List<Role> getRoles();
     Role findRoleById(Integer id);
     Role updateRole(Role updateRole);
+    List<User> findUsersByRoleId(int i);
 }
