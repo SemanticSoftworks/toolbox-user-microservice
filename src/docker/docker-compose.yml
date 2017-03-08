@@ -6,9 +6,11 @@ services:
       - "8091:8091"
     depends_on:
           - "userdb"
+    restart: always
   userdb:
     build: ./mysql
     volumes:
       - /home/docker/SemanticSoftworks/user-microservice-db:/var/lib/mysql
     ports:
       - "3307:3307"
+    restart: always
