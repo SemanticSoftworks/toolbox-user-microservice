@@ -6,6 +6,7 @@ services:
       - "8091:8091"
     depends_on:
           - "userdb"
+    restart: always
   userdb:
     build: ./mysql
     volumes:
